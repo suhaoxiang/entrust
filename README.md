@@ -1,4 +1,4 @@
-# ENTRUST (Laravel 5 Package)
+# ENTRUST中文版 (基于laravel5框架)
 
 [![Build Status](https://travis-ci.org/Zizaco/entrust.svg)](https://travis-ci.org/Zizaco/entrust)
 [![Version](https://img.shields.io/packagist/v/Zizaco/entrust.svg)](https://packagist.org/packages/zizaco/entrust)
@@ -7,61 +7,60 @@
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/cc4af966-809b-4fbc-b8b2-bb2850e6711e/small.png)](https://insight.sensiolabs.com/projects/cc4af966-809b-4fbc-b8b2-bb2850e6711e)
 
-Entrust is a succinct and flexible way to add Role-based Permissions to **Laravel 5**.
+Entrust 是用来添加基于角色的权限控制，比较简洁灵活。基于laravel5以上的版本。
 
-If you are looking for the Laravel 4 version, take a look [Branch 1.0](https://github.com/Zizaco/entrust/tree/1.0). It
-contains the latest entrust version for Laravel 4.
+如果你是laravel4的版本，请移步到这里看这个[Branch 1.0](https://github.com/Zizaco/entrust/tree/1.0)。
 
-## Contents
+## 目录
 
-- [Installation](#installation)
-- [Configuration](#configuration)
-    - [User relation to roles](#user-relation-to-roles)
-    - [Models](#models)
-        - [Role](#role)
-        - [Permission](#permission)
-        - [User](#user)
-        - [Soft Deleting](#soft-deleting)
-- [Usage](#usage)
-    - [Concepts](#concepts)
-        - [Checking for Roles & Permissions](#checking-for-roles--permissions)
-        - [User ability](#user-ability)
-    - [Blade templates](#blade-templates)
-    - [Middleware](#middleware)
-    - [Short syntax route filter](#short-syntax-route-filter)
-    - [Route filter](#route-filter)
-- [Troubleshooting](#troubleshooting)
+- [安装](#安装)
+- [配置](#配置)
+    - [用户与角色](#用户与角色)
+    - [模型](#模型)
+        - [角色](#角色)
+        - [权限](#权限)
+        - [用户](#用户)
+        - [软删除](#软删除)
+- [用法](#用法)
+    - [概念](#概念)
+        - [检查角色与权限](#检查角色与权限)
+        - [用户ability方法](#用户ability方法)
+    - [Blade模板](#Blade模板)
+    - [中间件](#中间件)
+    - [路由过滤中的短语法](#路由过滤中的短语法)
+    - [路由过滤](#路由过滤)
+- [常见问题](#常见问题)
 - [License](#license)
 - [Contribution guidelines](#contribution-guidelines)
 - [Additional information](#additional-information)
 
-## Installation
+## 安装
 
-1) In order to install Laravel 5 Entrust, just add the following to your composer.json. Then run `composer update`:
+1) 安装laravel 5 Entrust 包，可以直接通过composer来安装:
 
 ```json
-"zizaco/entrust": "5.2.x-dev"
+composer require suhaoxiang/entrust
 ```
 
-2) Open your `config/app.php` and add the following to the `providers` array:
+2) 然后打开 `config/app.php` 文件添加下面的内容到 `providers` 数组中:
 
 ```php
-Zizaco\Entrust\EntrustServiceProvider::class,
+suhaoxiang\Entrust\EntrustServiceProvider::class,
 ```
 
-3) In the same `config/app.php` and add the following to the `aliases ` array: 
+3) 同时也要在 `config/app.php` 文件的下面的 `aliases ` 数组中添加以下内容: 
 
 ```php
-'Entrust'   => Zizaco\Entrust\EntrustFacade::class,
+'Entrust'   => suhaoxiang\Entrust\EntrustFacade::class,
 ```
 
-4) Run the command below to publish the package config file `config/entrust.php`:
+4) 然后运行命令，让它自动生成 `config/entrust.php` 文件:
 
 ```shell
 php artisan vendor:publish
 ```
 
-5) Open your `config/auth.php` and add the following to it:
+5) 打开 `config/auth.php` 文件添加下面的内容:
 
 ```php
 'providers' => [
@@ -73,96 +72,92 @@ php artisan vendor:publish
 ],
 ```
 
-6)  If you want to use [Middleware](#middleware) (requires Laravel 5.1 or later) you also need to add the following:
+6)  如果你想使用中间件来控制权限，那你就可以添加如下内容到 `app/Http/Kernel.php` 文件中的  `routeMiddleware` 数组中:
 
 ```php
-    'role' => \Zizaco\Entrust\Middleware\EntrustRole::class,
-    'permission' => \Zizaco\Entrust\Middleware\EntrustPermission::class,
-    'ability' => \Zizaco\Entrust\Middleware\EntrustAbility::class,
+    'role' => \suhaoxiang\Entrust\EntrustFacade::class\Entrust\Middleware\EntrustRole::class,
+    'permission' => \suhaoxiang\Entrust\Middleware\EntrustPermission::class,
+    'ability' => \suhaoxiang\Entrust\Middleware\EntrustAbility::class,
 ```
 
-to `routeMiddleware` array in `app/Http/Kernel.php`.
 
-## Configuration
+## 配置
 
-Set the property values in the `config/auth.php`.
-These values will be used by entrust to refer to the correct user table and model.
+在  `config/auth.php` 文件中设置一些属性的值，让用户表和模型相互关联。当然你也可以自定义表名称和模型直接去 `config/entrust.php` 这个文件中编辑。
 
-To further customize table names and model namespaces, edit the `config/entrust.php`.
+### 用户与角色
 
-### User relation to roles
-
-Now generate the Entrust migration:
+使用 Entrust migration命令来生成`<timestamp>_entrust_setup_tables.php` migration 文件:
 
 ```bash
 php artisan entrust:migration
 ```
 
-It will generate the `<timestamp>_entrust_setup_tables.php` migration.
-You may now run it with the artisan migrate command:
+
+然后使用artisan migrate 命令来生成表:
 
 ```bash
 php artisan migrate
 ```
 
-After the migration, four new tables will be present:
-- `roles` &mdash; stores role records
-- `permissions` &mdash; stores permission records
-- `role_user` &mdash; stores [many-to-many](http://laravel.com/docs/4.2/eloquent#many-to-many) relations between roles and users
-- `permission_role` &mdash; stores [many-to-many](http://laravel.com/docs/4.2/eloquent#many-to-many) relations between roles and permissions
+运行完命令之后，生成了下面四张表
+- `roles` &mdash; 存储角色
+- `permissions` &mdash; 存储权限
+- `role_user` &mdash; 存储 [多对多](https://d.laravel-china.org/docs/5.4/eloquent-relationships#多对多)角色与用户多对多关联
+- `permission_role` &mdash; 存储 [多对多](https://d.laravel-china.org/docs/5.4/eloquent-relationships#多对多) 角色与权限多对多关联
 
-### Models
+### 模型
 
-#### Role
+#### 角色
 
-Create a Role model inside `app/models/Role.php` using the following example:
+创建角色模型文件 `app/models/Role.php` ，例如:
 
 ```php
 <?php namespace App;
 
-use Zizaco\Entrust\EntrustRole;
+use suhaoxiang\Entrust\EntrustRole;
 
 class Role extends EntrustRole
 {
 }
 ```
 
-The `Role` model has three main attributes:
-- `name` &mdash; Unique name for the Role, used for looking up role information in the application layer. For example: "admin", "owner", "employee".
-- `display_name` &mdash; Human readable name for the Role. Not necessarily unique and optional. For example: "User Administrator", "Project Owner", "Widget  Co. Employee".
-- `description` &mdash; A more detailed explanation of what the Role does. Also optional.
+角色模型继承了EntrustRole类之后就有三个主要的属性：
+- `name` &mdash; 角色名称，Unique唯一字段，在应用层查看角色信息，例如: "admin", "owner", "employee".
+- `display_name` &mdash; 方便普通使用者直观阅读角色名称，不是唯一的，这个是可选项。例如: "User Administrator", "Project Owner", "Widget  Co. Employee".
+- `description` &mdash; 这个角色简介，也是可选项。
 
-Both `display_name` and `description` are optional; their fields are nullable in the database.
+`display_name` 和 `description` 字段是可选项，他们的字段可以为空。
 
-#### Permission
+#### 权限
 
-Create a Permission model inside `app/models/Permission.php` using the following example:
+创建权限模型文件 `app/models/Permission.php` ，例如:
 
 ```php
 <?php namespace App;
 
-use Zizaco\Entrust\EntrustPermission;
+use suhaoxiang\Entrust\EntrustPermission;
 
 class Permission extends EntrustPermission
 {
 }
 ```
 
-The `Permission` model has the same three attributes as the `Role`:
-- `name` &mdash; Unique name for the permission, used for looking up permission information in the application layer. For example: "create-post", "edit-user", "post-payment", "mailing-list-subscribe".
-- `display_name` &mdash; Human readable name for the permission. Not necessarily unique and optional. For example "Create Posts", "Edit Users", "Post Payments", "Subscribe to mailing list".
-- `description` &mdash; A more detailed explanation of the Permission.
+权限模型继承了EntrustPermission类之后同样也有三个主要的属性：
+- `name` &mdash; 权限名称，Unique唯一字段，在应用层查看角色信息，例如: "create-post", "edit-user", "post-payment", "mailing-list-subscribe".
+- `display_name` &mdash; 方便普通使用者直观阅读权限名称，不是唯一的，这个是可选项。 例如 "Create Posts", "Edit Users", "Post Payments", "Subscribe to mailing list".
+- `description` &mdash; 权限简介。
 
-In general, it may be helpful to think of the last two attributes in the form of a sentence: "The permission `display_name` allows a user to `description`."
+`display_name` 和 `description` 字段是可选项，但是为了让用户明白使用，最好写上相应的内容。
 
-#### User
+#### 用户
 
-Next, use the `EntrustUserTrait` trait in your existing `User` model. For example:
+用户模型，laravel 5 在app文件夹下自带了 `User` 模型，我们就用这个模型，需要用到 `EntrustUserTrait` trait ，例如:
 
 ```php
 <?php
 
-use Zizaco\Entrust\Traits\EntrustUserTrait;
+use suhaoxiang\Entrust\Traits\EntrustUserTrait;
 
 class User extends Eloquent
 {
@@ -172,18 +167,17 @@ class User extends Eloquent
 }
 ```
 
-This will enable the relation with `Role` and add the following methods `roles()`, `hasRole($name)`, `can($permission)`, and `ability($roles, $permissions, $options)` within your `User` model.
-
-Don't forget to dump composer autoload
+使用了`EntrustUserTrait` trait，该模型获得一些方法`roles()`, `hasRole($name)`, `can($permission)`, 和 `ability($roles, $permissions, $options)` 方法。
+不要忘了运行composer dump-autoload命令
 
 ```bash
 composer dump-autoload
 ```
 
-**And you are ready to go.**
 
-#### Soft Deleting
+#### 软删除
 
+默认数据迁移是利用 `onDelete('cascade')` 
 The default migration takes advantage of `onDelete('cascade')` clauses within the pivot tables to remove relations when a parent record is deleted. If for some reason you cannot use cascading deletes in your database, the EntrustRole and EntrustPermission classes, and the HasRole trait include event listeners to manually delete records in relevant pivot tables. In the interest of not accidentally deleting data, the event listeners will **not** delete pivot data if the model uses soft deleting. However, due to limitations in Laravel's event listeners, there is no way to distinguish between a call to `delete()` versus a call to `forceDelete()`. For this reason, **before you force delete a model, you must manually delete any of the relationship data** (unless your pivot tables uses cascading deletes). For example:
 
 ```php
@@ -199,10 +193,10 @@ $role->perms()->sync([]); // Delete relationship data
 $role->forceDelete(); // Now force delete will work regardless of whether the pivot table has cascading delete
 ```
 
-## Usage
+## 用法
 
-### Concepts
-Let's start by creating the following `Role`s and `Permission`s:
+### 概念
+首先我们先创建一些角色信息和权限信息
 
 ```php
 $owner = new Role();
@@ -218,20 +212,19 @@ $admin->description  = 'User is allowed to manage and edit other users'; // opti
 $admin->save();
 ```
 
-Next, with both roles created let's assign them to the users.
-Thanks to the `HasRole` trait this is as easy as:
+然后把这两个角色分配给用户。多亏了 `HasRole` trait 让这个变得如此简单：
 
 ```php
 $user = User::where('username', '=', 'michele')->first();
 
 // role attach alias
-$user->attachRole($admin); // parameter can be an Role object, array, or id
+$user->attachRole($admin); // 参数可以是对象，数组或者id
 
-// or eloquent's original technique
-$user->roles()->attach($admin->id); // id only
+// 或者使用 eloquent's original technique
+$user->roles()->attach($admin->id); // 参数只能是id
 ```
 
-Now we just need to add permissions to those Roles:
+接下来我们需要添加一些权限给这些角色：
 
 ```php
 $createPost = new Permission();
@@ -255,9 +248,9 @@ $owner->attachPermissions(array($createPost, $editUser));
 // equivalent to $owner->perms()->sync(array($createPost->id, $editUser->id));
 ```
 
-#### Checking for Roles & Permissions
+#### 检查角色与权限
 
-Now we can check for roles and permissions simply by doing:
+检查角色与权限变得如此简单，例如:
 
 ```php
 $user->hasRole('owner');   // false
@@ -266,15 +259,14 @@ $user->can('edit-user');   // false
 $user->can('create-post'); // true
 ```
 
-Both `hasRole()` and `can()` can receive an array of roles & permissions to check:
+`hasRole()` 和 `can()` 方法的第一个参数可以 接受字符串或者数组来进行检查：
 
 ```php
 $user->hasRole(['owner', 'admin']);       // true
 $user->can(['edit-user', 'create-post']); // true
 ```
 
-By default, if any of the roles or permissions are present for a user then the method will return true.
-Passing `true` as a second parameter instructs the method to require **all** of the items:
+默认情况下，只要匹配到其中的某一个就会返回true。如果添加第二个参数为 `true` ，则意思是需要匹配到所有的才会返回true：
 
 ```php
 $user->hasRole(['owner', 'admin']);             // true
@@ -283,21 +275,19 @@ $user->can(['edit-user', 'create-post']);       // true
 $user->can(['edit-user', 'create-post'], true); // false, user does not have edit-user permission
 ```
 
-You can have as many `Role`s as you want for each `User` and vice versa.
-
-The `Entrust` class has shortcuts to both `can()` and `hasRole()` for the currently logged in user:
+每个用户可以有多个角色，每个角色可以属于多个用户。验证当前登录的用户 `Entrust` 类也是可直接使用 `can()` 和 `hasRole()` 方法。
 
 ```php
 Entrust::hasRole('role-name');
 Entrust::can('permission-name');
 
-// is identical to
+// 同样的方式
 
 Auth::user()->hasRole('role-name');
 Auth::user()->can('permission-name');
 ```
 
-You can also use placeholders (wildcards) to check any matching permission by doing:
+你也可以使用通配符来检查更多的权限，例如：
 
 ```php
 // match any admin permission
@@ -308,14 +298,12 @@ $user->can("*_users"); // true
 ```
 
 
-#### User ability
+#### 用户ability方法
 
-More advanced checking can be done using the awesome `ability` function.
-It takes in three parameters (roles, permissions, options):
-- `roles` is a set of roles to check.
-- `permissions` is a set of permissions to check.
+更多高级的检查方法可以使用 `ability` 方法。它有三个参数 (roles, permissions, options)，第三个参数是可选：
+- `roles` 设置一些角色，可以是字符串也可以是一个数组。
+- `permissions` 设置一些权限，可以是字符串也可以是一个数组。
 
-Either of the roles or permissions variable can be a comma separated string or array:
 
 ```php
 $user->ability(array('admin', 'owner'), array('create-post', 'edit-user'));
@@ -325,10 +313,8 @@ $user->ability(array('admin', 'owner'), array('create-post', 'edit-user'));
 $user->ability('admin,owner', 'create-post,edit-user');
 ```
 
-This will check whether the user has any of the provided roles and permissions.
-In this case it will return true since the user is an `admin` and has the `create-post` permission.
-
-The third parameter is an options array:
+它将检查角色和权限每一项，如果角色中有一项true，权限中有一项为true，则返回true。
+第三个参数是一个可选数组。
 
 ```php
 $options = array(
@@ -337,8 +323,8 @@ $options = array(
 );
 ```
 
-- `validate_all` is a boolean flag to set whether to check all the values for true, or to return true if at least one role or permission is matched.
-- `return_type` specifies whether to return a boolean, array of checked values, or both in an array.
+- `validate_all` 默认为false，为true是检查所有的值都必须为true才会返回。
+- `return_type` 指定是否返回数组中的布尔值、校验值数组或两者。
 
 Here is an example output:
 
@@ -366,7 +352,7 @@ var_dump($allValidations);
 // }
 
 ```
-The `Entrust` class has a shortcut to `ability()` for the currently logged in user:
+对于当前登录的用户 `Entrust` 类同样也有 `ability()` 方法。
 
 ```php
 Entrust::ability('admin,owner', 'create-post,edit-user');
@@ -376,9 +362,9 @@ Entrust::ability('admin,owner', 'create-post,edit-user');
 Auth::user()->ability('admin,owner', 'create-post,edit-user');
 ```
 
-### Blade templates
+### Blade模板
 
-Three directives are available for use within your Blade templates. What you give as the directive arguments will be directly passed to the corresponding `Entrust` function.
+使用blade模板中的第三方指令。然后将指令的参数传递给相应的 `Entrust` 函数。
 
 ```php
 @role('admin')
@@ -398,9 +384,9 @@ Three directives are available for use within your Blade templates. What you giv
 @endability
 ```
 
-### Middleware
+### 中间件
 
-You can use a middleware to filter routes and route groups by permission or role
+你可以使用中间件通过角色和权限来过滤路由和路由组。
 ```php
 Route::group(['prefix' => 'admin', 'middleware' => ['role:admin']], function() {
     Route::get('/', 'AdminController@welcome');
@@ -408,24 +394,24 @@ Route::group(['prefix' => 'admin', 'middleware' => ['role:admin']], function() {
 });
 ```
 
-It is possible to use pipe symbol as *OR* operator:
+你也可以使用管道符号，表示 “ or ” 的操作。
 ```php
 'middleware' => ['role:admin|root']
 ```
 
-To emulate *AND* functionality just use multiple instances of middleware
+使用中间件的多实例表示 “ and ” 的操作。
 ```php
 'middleware' => ['role:owner', 'role:writer']
 ```
 
-For more complex situations use `ability` middleware which accepts 3 parameters: roles, permissions, validate_all
+例如一个复杂的例子，`ability` 中间件给定三个参数: roles, permissions, validate_all
 ```php
 'middleware' => ['ability:admin|owner,create-post|edit-user,true']
 ```
 
-### Short syntax route filter
+### 路由过滤中的短语法
 
-To filter a route by permission or role you can call the following in your `app/Http/routes.php`:
+你可以在 `app/Http/routes.php` 文件中通过权限或者角色来过滤路由。
 
 ```php
 // only users with roles that have the 'manage_posts' permission will be able to access any route within admin/post
@@ -440,18 +426,14 @@ Entrust::routeNeedsPermission('admin/post*', array('create-post', 'edit-comment'
 Entrust::routeNeedsRole('admin/advanced*', array('owner','writer'));
 ```
 
-Both of these methods accept a third parameter.
-If the third parameter is null then the return of a prohibited access will be `App::abort(403)`, otherwise the third parameter will be returned.
-So you can use it like:
+上面的两个方法允许接收第三个参数。
+如果第三个参数为null，函数返回值为false的话，将会抛出403 `App::abort(403)`。如果填写了第三个参数则直接跳转。例如：
 
 ```php
 Entrust::routeNeedsRole('admin/advanced*', 'owner', Redirect::to('/home'));
 ```
 
-Furthermore both of these methods accept a fourth parameter.
-It defaults to true and checks all roles/permissions given.
-If you set it to false, the function will only fail if all roles/permissions fail for that user.
-Useful for admin applications where you want to allow access for multiple groups.
+此外这两个方法还可以接受第四个参数，默认值true，检查所有给定的角色/权限。如果你设置为false，所有的角色/权限都匹配失败了，才会返回false。这个对于多个组的访问管理应用是有用的。
 
 ```php
 // if a user has 'create-post', 'edit-comment', or both they will have access
@@ -471,9 +453,9 @@ Entrust::routeNeedsRoleOrPermission(
 );
 ```
 
-### Route filter
+### 路由过滤
 
-Entrust roles/permissions can be used in filters by simply using the `can` and `hasRole` methods from within the Facade:
+在路由过滤中，Entrust 角色/权限类也可以使用Facade方式来使用`can` 和 `hasRole`方法。
 
 ```php
 Route::filter('manage_posts', function()
@@ -488,7 +470,7 @@ Route::filter('manage_posts', function()
 Route::when('admin/post*', 'manage_posts');
 ```
 
-Using a filter to check for a role:
+例如使用一个过滤来检查角色:
 
 ```php
 Route::filter('owner_role', function()
@@ -503,12 +485,11 @@ Route::filter('owner_role', function()
 Route::when('admin/advanced*', 'owner_role');
 ```
 
-As you can see `Entrust::hasRole()` and `Entrust::can()` checks if the user is logged in, and then if he or she has the role or permission.
-If the user is not logged the return will also be `false`.
+ `Entrust::hasRole()` 和 `Entrust::can()` 可以检查用户是否登录，如果用户未登录直接返回 `false` 。
 
-## Troubleshooting
+## 常见问题
 
-If you encounter an error when doing the migration that looks like:
+如果你在做数据迁移时发生如下错误:
 
 ```
 SQLSTATE[HY000]: General error: 1005 Can't create table 'laravelbootstrapstarter.#sql-42c_f8' (errno: 150)
@@ -516,16 +497,14 @@ SQLSTATE[HY000]: General error: 1005 Can't create table 'laravelbootstrapstarter
     references `users` (`id`)) (Bindings: array ())
 ```
 
-Then it's likely that the `id` column in your user table does not match the `user_id` column in `role_user`.
-Make sure both are `INT(10)`.
+这个可能是user表中的 `id` 字段跟 `role_user` 表中的 `user_id` 字段不匹配。确保他们都是`INT(10)`。
 
-When trying to use the EntrustUserTrait methods, you encounter the error which looks like
+如果你在用 EntrustUserTrait 方法时，发生如下错误
 
     Class name must be a valid object or a string
 
-then probably you don't have published Entrust assets or something went wrong when you did it.
-First of all check that you have the `entrust.php` file in your `config` directory.
-If you don't, then try `php artisan vendor:publish` and, if it does not appear, manually copy the `/vendor/zizaco/entrust/src/config/config.php` file in your config directory and rename it `entrust.php`.
+这坑你是你没有发布 Entrust assets资源，先检查config文件夹中是否存在 `entrust.php` 文件。如果没有你可以使用`php artisan vendor:publish`命令尝试修复。或者直接从`/vendor/zizaco/entrust/src/config/config.php`文件中复制一份到config文件下的`entrust.php`文件中。
+
 
 ## License
 
