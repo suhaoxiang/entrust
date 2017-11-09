@@ -84,6 +84,7 @@ php artisan vendor:publish
 ## 配置
 
 在  `config/auth.php` 文件中设置一些属性的值，让用户表和模型相互关联。当然你也可以自定义表名称和模型直接去 `config/entrust.php` 这个文件中编辑。
+注意：如果你的用户表不是user，你还需要配置一下user_foreign_key的值。
 
 ### 用户与角色
 
@@ -176,6 +177,7 @@ composer dump-autoload
 
 
 #### 软删除
+
 
 默认数据迁移是利用 `onDelete('cascade')` 
 The default migration takes advantage of `onDelete('cascade')` clauses within the pivot tables to remove relations when a parent record is deleted. If for some reason you cannot use cascading deletes in your database, the EntrustRole and EntrustPermission classes, and the HasRole trait include event listeners to manually delete records in relevant pivot tables. In the interest of not accidentally deleting data, the event listeners will **not** delete pivot data if the model uses soft deleting. However, due to limitations in Laravel's event listeners, there is no way to distinguish between a call to `delete()` versus a call to `forceDelete()`. For this reason, **before you force delete a model, you must manually delete any of the relationship data** (unless your pivot tables uses cascading deletes). For example:
